@@ -60,7 +60,10 @@ class JobPool
     process
   end
 
-  # TODO: not private so jobs can add and remove themselves.  yuk!
+  # called there's an error in a job's subthreads. never happens during normal # usage.
+  def log msg
+    STDERR.puts msg
+  end
 
   def _add process
     @mutex.synchronize do

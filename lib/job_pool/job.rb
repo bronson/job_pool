@@ -147,6 +147,8 @@ private
       # puts "EOF STDIN #{reader}" if writer == @chin
     rescue Errno::EPIPE
       # child was killed, no problem
+    rescue StandardError => e
+      @pool.log "#{e.class}: #{e.message}\n"
     ensure
       reader.close
       # writer may already be closed
