@@ -77,11 +77,23 @@ describe JobPool do
     expect(result).to eq object
   end
 
-  it "can do the readme example" do
+  it "can do the first readme example" do
     pool = JobPool.new
     job = pool.launch("sleep 0.1; tr A-Za-z N-ZA-Mn-za-m", "the secrets")
     expect(job.output).to eq ''
+    expect(pool.count).to eq 1
     sleep(0.2)
     expect(job.output).to eq "gur frpergf"
+    expect(pool.count).to eq 0
+  end
+
+  it "can do the second readme example" do
+    pool = JobPool.new
+    # can't use `expect { ... }.to output('contents').to_stdout`
+    # because the test's stdout gets closed
+    output = StringIO.new
+    pool.launch 'gzcat', File.open('spec/contents.txt.gz'), output
+    pool.wait_next
+    expect(output.string).to eq "contents\n"
   end
 end

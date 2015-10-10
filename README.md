@@ -33,15 +33,22 @@ Then fire off some jobs.  This one waits a bit then ROT-13s its input.
 
 ```ruby
 job = pool.launch("sleep 5; tr A-Za-z N-ZA-Mn-za-m", "the secrets")
+pool.count       => 1
 job.output       => ""
                  (after five seconds...)
+pool.count       => 0
 job.output       => "gur frpergf"
 ```
 
-You can specify IO objects:
+You can specify IO objects to read from and write to:
+
+TODO: this works, but it closes your stdout!  That's problematic.
+Need to add a mode that doesn't close the output stream when you're done.
+
+TODO: should specify args using keywords rather than position.
 
 ```ruby
-job = pool.launch 'zcat', File.open('report.txt.gz', STDOUT)
+pool.launch 'gzcat', File.open('contents.txt.gz'), STDOUT
 ```
 
 TODO: describe killing and timeouts
