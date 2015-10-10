@@ -16,6 +16,7 @@ class JobPool::Job
 
   # runs cmd, passes instr on its stdin, and fills outio and
   # errio with the command's output.
+  # TODO: should specify args using keywords rather than position.
   def initialize pool, cmd, inio=nil, outio=nil, errio=nil, timeout=nil
     @start_time = Time.now
     @pool  = pool

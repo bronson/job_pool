@@ -2,6 +2,9 @@
 
 Fork off jobs to run in the background.  Feed them data, read their results, kill them, set timeouts.
 
+[![Build Status](https://travis-ci.org/bronson/job_pool.svg?branch=master)](https://travis-ci.org/bronson/job_pool)
+[![Gem Version](https://badge.fury.io/rb/job_pool.svg)](http://badge.fury.io/rb/job_pool)
+
 
 ## Installation
 
@@ -13,7 +16,7 @@ gem 'job_pool'
 
 ## Usage
 
-Do this if you want to try the examples in irb:
+Start like this if you want to try these examples in irb.
 
 ```bash
 $ git clone https://github.com/bronson/job_pool
@@ -29,7 +32,7 @@ require 'job_pool'
 pool = JobPool.new
 ```
 
-Then fire off some jobs.  This one waits a bit then ROT-13s its input.
+Then fire off a job.  This one waits a bit and then ROT-13s its input.
 
 ```ruby
 job = pool.launch("sleep 5; tr A-Za-z N-ZA-Mn-za-m", "the secrets")
@@ -43,15 +46,17 @@ job.output       => "gur frpergf"
 You can specify IO objects to read from and write to:
 
 TODO: this works, but it closes your stdout!  That's problematic.
-Need to add a mode that doesn't close the output stream when you're done.
-
-TODO: should specify args using keywords rather than position.
+Maybe add a mode that doesn't close the output stream when you're done?
 
 ```ruby
 pool.launch 'gzcat', File.open('contents.txt.gz'), STDOUT
 ```
 
 TODO: describe killing and timeouts
+
+TODO: describe limiting processes
+
+TODO: include an example of a job queue
 
 
 ### Error Handling
@@ -68,5 +73,5 @@ MIT, enjoy!
 
 ## Contributing
 
-Please submit issues and patches on
+Submit patches and issues on
 [GitHub](https://github.com/bronson/job_pool/).
