@@ -1,8 +1,8 @@
 # Fires off a child process, feeds it, and keeps track of the results.
 
 require 'open3'
-require 'json'
 require 'tempfile'
+require 'stringio'
 
 
 class JobPool; end
@@ -12,12 +12,16 @@ class JobPool; end
 # job is the Ruby data structure, process is the Unix process.
 class JobPool::Job
   attr_reader :start_time, :stop_time  # start and finish times of this job
+  attr_reader :inio, :outio, :errio    # fds for child's stdin/stdout/stderr
 
   # runs cmd, passes instr on its stdin, and fills outio and
   # errio with the command's output.
-  def initialize pool, cmd, inio, outio, errio, timeout=nil
+  def initialize pool, cmd, inio=nil, outio=nil, errio=nil, timeout=nil
     @start_time = Time.now
-    @pool = pool
+    @pool  = pool
+    @inio  = inio || StringIO.new
+    @outio = outio || StringIO.new
+    @errio = errio || StringIO.new
     @chin, @chout, @cherr, @child = Open3.popen3(*cmd)
 
     @pool._add(self)
@@ -26,9 +30,9 @@ class JobPool::Job
     @killed = false
     @timed_out = false
 
-    @thrin  = Thread.new { drain(inio, @chin) }
-    @throut = Thread.new { drain(@chout, outio) }
-    @threrr = Thread.new { drain(@cherr, errio) }
+    @thrin  = Thread.new { drain(@inio, @chin) }
+    @throut = Thread.new { drain(@chout, @outio) }
+    @threrr = Thread.new { drain(@cherr, @errio) }
 
     # ensure cleanup is called when the child exits. (crazy that this requires a whole new thread!)
     # TODO: rename me to cleanup_thread?
@@ -43,6 +47,21 @@ class JobPool::Job
     end
   end
 
+  def write *args
+    @inio.write *args
+  end
+
+  def read *args
+    @outio.read *args
+  end
+
+  def output
+    @outio.string
+  end
+
+  def error
+    @errio.string
+  end
 
   def finished?
     @stop_time != nil
@@ -97,6 +116,7 @@ class JobPool::Job
   end
 
   # returns true if process was previously active.  must be externally synchronized.
+  # TODO: this is a terrible api.  gotta be a way to clean it up.
   def _deactivate
     retval = @inactive
     @inactive = true

@@ -1,5 +1,7 @@
 require 'thwait'
 
+require 'job_pool/job'
+
 # TODO: take mutex once in kill_all
 # TODO: rewrite wait_next
 

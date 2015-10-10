@@ -44,7 +44,6 @@ describe JobPool::Job do
     expect(job.finished?).to eq true
   end
 
-
   it "waits until a sleeping command is finished" do
     # pile a bunch of checks into this test so we only have to sleep once
     expect(pool.count).to eq 0

@@ -71,9 +71,18 @@ describe JobPool do
 
   it "can find a process" do
     object = Object.new
-    jp = JobPool.new
-    jp._add(object)
-    result = jp.find { |o| o == object }
+    pool = JobPool.new
+    pool._add(object)
+    result = pool.find { |o| o == object }
     expect(result).to eq object
+  end
+
+  it "can do the readme example" do
+    pool = JobPool.new
+    input = StringIO.new("no you toucha my secrets")
+    job = pool.launch("sleep 0.1; tr A-Za-z N-ZA-Mn-za-m", input)
+    expect(job.output).to eq ''
+    sleep(0.2)
+    expect(job.output).to eq "ab lbh gbhpun zl frpergf"
   end
 end
