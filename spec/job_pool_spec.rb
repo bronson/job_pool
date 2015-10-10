@@ -91,9 +91,9 @@ describe JobPool do
     pool = JobPool.new
     # can't use `expect { ... }.to output('contents').to_stdout`
     # because the test's stdout gets closed
-    output = StringIO.new
-    pool.launch 'gzcat', File.open('spec/contents.txt.gz'), output
+    outstr = StringIO.new
+    pool.launch 'gunzip --to-stdout', File.open('spec/contents.txt.gz'), outstr
     pool.wait_next
-    expect(output.string).to eq "contents\n"
+    expect(outstr.string).to eq "contents\n"
   end
 end
