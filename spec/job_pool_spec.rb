@@ -79,10 +79,9 @@ describe JobPool do
 
   it "can do the readme example" do
     pool = JobPool.new
-    input = StringIO.new("no you toucha my secrets")
-    job = pool.launch("sleep 0.1; tr A-Za-z N-ZA-Mn-za-m", input)
+    job = pool.launch("sleep 0.1; tr A-Za-z N-ZA-Mn-za-m", "the secrets")
     expect(job.output).to eq ''
     sleep(0.2)
-    expect(job.output).to eq "ab lbh gbhpun zl frpergf"
+    expect(job.output).to eq "gur frpergf"
   end
 end

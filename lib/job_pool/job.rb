@@ -20,6 +20,7 @@ class JobPool::Job
     @start_time = Time.now
     @pool  = pool
     @inio  = inio || StringIO.new
+    @inio  = StringIO.new(@inio.to_s) unless @inio.respond_to?(:readpartial)
     @outio = outio || StringIO.new
     @errio = errio || StringIO.new
     @chin, @chout, @cherr, @child = Open3.popen3(*cmd)
