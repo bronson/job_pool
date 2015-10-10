@@ -37,8 +37,7 @@ class JobPool::Job
     @threrr = Thread.new { drain(@cherr, @errio) }
 
     # ensure cleanup is called when the child exits. (crazy that this requires a whole new thread!)
-    # TODO: rename me to cleanup_thread?
-    @thrchild = Thread.new do
+    @cleanup_thread = Thread.new do
       if timeout
         # TODO: inline outatime
         outatime unless @child.join(timeout)
@@ -94,7 +93,7 @@ class JobPool::Job
     end
     # ensure kill doesn't return until process is truly gone
     # (there may be a chance of this deadlocking with a blocking callback... not sure)
-    @thrchild.join unless Thread.current == @thrchild
+    @cleanup_thread.join unless Thread.current == @cleanup_thread
   end
 
   # waits patiently until the process terminates, then cleans up
@@ -129,7 +128,7 @@ class JobPool::Job
 private
   def wait_for_the_end
     [@thrin, @throut, @threrr, @child].each(&:join)
-    @thrchild.join unless Thread.current == @thrchild
+    @cleanup_thread.join unless Thread.current == @cleanup_thread
   end
 
   def outatime
