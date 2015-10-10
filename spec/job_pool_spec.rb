@@ -76,24 +76,4 @@ describe JobPool do
     result = pool.find { |o| o == object }
     expect(result).to eq object
   end
-
-  it "can do the first readme example" do
-    pool = JobPool.new
-    job = pool.launch("sleep 0.1; tr A-Za-z N-ZA-Mn-za-m", "the secrets")
-    expect(job.output).to eq ''
-    expect(pool.count).to eq 1
-    sleep(0.2)
-    expect(job.output).to eq "gur frpergf"
-    expect(pool.count).to eq 0
-  end
-
-  it "can do the second readme example" do
-    pool = JobPool.new
-    # can't use `expect { ... }.to output('contents').to_stdout`
-    # because the test's stdout gets closed
-    outstr = StringIO.new
-    pool.launch 'gunzip --to-stdout', File.open('spec/contents.txt.gz'), outstr
-    pool.wait_next
-    expect(outstr.string).to eq "contents\n"
-  end
 end
