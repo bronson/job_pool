@@ -4,15 +4,19 @@ require 'thwait'
 # TODO: rewrite wait_next
 
 class JobPool
-  class TooManyProcessesError < StandardError; end
+  class TooManyJobsError < StandardError; end
 
-  attr_accessor :max_processes
+  attr_accessor :max_jobs
 
   def initialize(options={})
     @mutex ||= Mutex.new
 
     @processes ||= []   # TODO: convert this to a hash by child thread?
-    @max_processes = options[:max_processes]
+    @max_jobs = options[:max_jobs]
+  end
+
+  def launch *args
+    JobPool::Job.new self, *args
   end
 
   def first
@@ -58,8 +62,8 @@ class JobPool
 
   def _add process
     @mutex.synchronize do
-      if @max_processes >= 0 && @processes.count >= @max_processes
-        raise JobPool::TooManyProcessesError.new("launched process #{@processes.count+1} of #{@max_processes} maximum")
+      if @max_jobs && @processes.count >= @max_jobs
+        raise JobPool::TooManyJobsError.new("launched process #{@processes.count+1} of #{@max_processes} maximum")
       end
       @processes.push process
     end
