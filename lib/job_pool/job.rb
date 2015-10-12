@@ -76,11 +76,6 @@ class JobPool::Job
     end
   end
 
-  # @param [Hash] opts the options to create a message with.
-  # @option opts [String] :subject The subject
-  # @option opts [String] :from ('nobody') From address
-  # @option opts [String] :to Recipient email
-  # @option opts [String] :body ('') The email's body
   def write *args
     @stdin.write *args
   end
