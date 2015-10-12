@@ -14,17 +14,26 @@ class JobPool::Job
   attr_reader :start_time, :stop_time  # start and finish times of this job
   attr_reader :inio, :outio, :errio    # fds for child's stdin/stdout/stderr
 
-  # runs cmd, passes instr on its stdin, and fills outio and
-  # errio with the command's output.
-  # TODO: should specify args using keywords rather than position.
-  def initialize pool, cmd, inio=nil, outio=nil, errio=nil, timeout=nil
+  # Starts a process.  Use JobPool#launch, don't call this method directly.
+  #
+  # The command is passed to Process.spawn.  It can be
+  # specified as a string or an array: ['cat', {pgroup: true}]
+  #
+  # @param [JobPool] pool The pool that will contain this job.
+  # @param [String, Array] command The command to run.  Can be specified either
+  #         as a string or an array of arguments for Process.spawn.
+  # @param [Hash] options A customizable set of options yo
+  # @option options [IO, String] :stdin The child's input. Can be specified as a string or an IO object.
+  def initialize pool, command, options={}
+
+    inio=nil, outio=nil, errio=nil, timeout=nil
     @start_time = Time.now
     @pool  = pool
     @inio  = inio || StringIO.new
     @inio  = StringIO.new(@inio.to_s) unless @inio.respond_to?(:readpartial)
     @outio = outio || StringIO.new
     @errio = errio || StringIO.new
-    @chin, @chout, @cherr, @child = Open3.popen3(*cmd)
+    @chin, @chout, @cherr, @child = Open3.popen3(*command)
 
     @pool._add(self)
     @chout.binmode
@@ -48,6 +57,11 @@ class JobPool::Job
     end
   end
 
+  # @param [Hash] opts the options to create a message with.
+  # @option opts [String] :subject The subject
+  # @option opts [String] :from ('nobody') From address
+  # @option opts [String] :to Recipient email
+  # @option opts [String] :body ('') The email's body
   def write *args
     @inio.write *args
   end
