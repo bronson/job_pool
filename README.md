@@ -35,7 +35,7 @@ pool = JobPool.new
 Then fire off a job.  This one waits a bit and then ROT-13s its input.
 
 ```ruby
-job = pool.launch("sleep 5; tr A-Za-z N-ZA-Mn-za-m", "the secrets")
+job = pool.launch("sleep 5; tr A-Za-z N-ZA-Mn-za-m", stdin: "the secrets")
 pool.count       => 1
 job.output       => ""
            (after five seconds)
@@ -47,13 +47,15 @@ job.output       => "gur frpergf"
 
 You can specify IO objects to read from and write to:
 
-TODO: this works, but it closes your stdout!  That's problematic.
-Maybe add a mode that doesn't close the output stream when done?
-Or just use a different example?
-
 ```ruby
-pool.launch 'gunzip --to-stdout', File.open('contents.txt.gz'), STDOUT
+source = File.open('contents.txt.gz')
+desdtination = File.open('/tmp/out', 'w')
+pool.launch 'gunzip --to-stdout', stdin: source, stdout: destination
 ```
+
+Note that if you specify STDIN or STDOUT, job_pool will close the stream
+when the child terminates.  This is almost certainly not what you want.
+TODO: add an option... `keep_open: :stdout`, `keep_open: [:stdin, :stdout]`
 
 #### Killing a Job
 
@@ -73,7 +75,7 @@ Pass the number of seconds to wait, default is 2 seconds.
 
 #### Timeouts
 
-TODO
+TODO: add a timeout example
 
 #### Limiting Running Processes
 
@@ -101,6 +103,15 @@ TODO: friggin documentation!
 ### Job Queues
 
 TODO: include an example of a job queue
+
+
+## Documentation
+
+I tried to use Ruby's automated documentation tools but it didn't stick.
+RDoc didn't have reliable markdown support and lacked param name checking.
+YARD produces uglier output (especially noframes) and its lack of :nodoc:
+makes my docs too noisy.  For now I'll just write documentation how I want
+to see it and hope some tool catches up.
 
 
 ## License

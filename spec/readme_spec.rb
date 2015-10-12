@@ -4,7 +4,7 @@ require 'job_pool'
 describe 'README' do
   it "can do the first example" do
     pool = JobPool.new
-    job = pool.launch("sleep 0.1; tr A-Za-z N-ZA-Mn-za-m", "the secrets")
+    job = pool.launch("sleep 0.1; tr A-Za-z N-ZA-Mn-za-m", stdin: "the secrets")
     expect(job.output).to eq ''
     expect(pool.count).to eq 1
     sleep(0.2)
@@ -16,10 +16,12 @@ describe 'README' do
     pool = JobPool.new
     # can't use `expect { ... }.to output('contents').to_stdout`
     # because the test's stdout gets closed
-    outstr = StringIO.new
-    pool.launch 'gunzip --to-stdout', File.open('spec/contents.txt.gz'), outstr
+    source = File.open('spec/contents.txt.gz')
+    destination = File.open("/tmp/test-#{$$}-out.txt", 'w')
+    pool.launch 'gunzip --to-stdout', stdin: source, stdout: destination
     pool.wait_next
-    expect(outstr.string).to eq "contents\n"
+    expect(File.read "/tmp/test-#{$$}-out.txt").to eq "contents\n"
+    File.delete "/tmp/test-#{$$}-out.txt"
   end
 
   it "can do the killer example" do

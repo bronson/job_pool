@@ -29,10 +29,10 @@ describe JobPool do
     after { expect(pool.count).to eq 0 }
 
     it "counts and kills multiple processes" do
-      pool.launch(['sleep', '20'], StringIO.new, StringIO.new, StringIO.new)
-      pool.launch(['sleep', '20'], StringIO.new, StringIO.new, StringIO.new)
-      pool.launch(['sleep', '20'], StringIO.new, StringIO.new, StringIO.new)
-      pool.launch(['sleep', '20'], StringIO.new, StringIO.new, StringIO.new)
+      pool.launch(['sleep', '20'])
+      pool.launch(['sleep', '20'])
+      pool.launch(['sleep', '20'])
+      pool.launch(['sleep', '20'])
       expect(pool.count).to eq 4
       pool.first.kill
       expect(pool.count).to eq 3
@@ -43,9 +43,9 @@ describe JobPool do
     it "waits for multiple processes" do
       # these sleep durations might be too small, depends on machine load and scheduling.
       # if you're seeing threads finishing in the wrong order, try increasing them 10X.
-      process1 = pool.launch(['sleep', '.3'], StringIO.new, StringIO.new, StringIO.new)
-      process2 = pool.launch(['sleep', '.1'], StringIO.new, StringIO.new, StringIO.new)
-      process3 = pool.launch(['sleep', '.2'], StringIO.new, StringIO.new, StringIO.new)
+      process1 = pool.launch(['sleep', '.3'])
+      process2 = pool.launch(['sleep', '.1'])
+      process3 = pool.launch(['sleep', '.2'])
       expect(pool.count).to eq 3
 
       child = pool.wait_next

@@ -6,12 +6,13 @@ require 'job_pool/job'
 # TODO: rewrite wait_next
 
 class JobPool
-  # Indicates that the maximum allowed jobs are already running.
-  # @see 
+  # Indicates that the maximum allowed jobs are already running.  Set in [initialize], thrown by [launch].
   class TooManyJobsError < StandardError; end
 
   attr_accessor :max_jobs
 
+  # ## Options
+  # * max_jobs: the maximum number of jobs that can be running at any one time, or nil if unlimited.
   def initialize(options={})
     @mutex ||= Mutex.new
 

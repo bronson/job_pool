@@ -11,45 +11,64 @@ class JobPool; end
 # A job keeps track of the child process that gets forked.
 # job is the Ruby data structure, process is the Unix process.
 class JobPool::Job
-  attr_reader :start_time, :stop_time  # start and finish times of this job
-  attr_reader :inio, :outio, :errio    # fds for child's stdin/stdout/stderr
+  attr_reader :start_time, :stop_time     # start and finish times of this job
+  attr_reader :stdin, :stdout, :stderr    # fds for child's stdin/stdout/stderr
 
-  # Starts a process.  Use JobPool#launch, don't call this method directly.
+  # **internal**: Use [JobPool#launch], don't call this method directly.
   #
-  # The command is passed to Process.spawn.  It can be
-  # specified as a string or an array: ['cat', {pgroup: true}]
+  # Starts a process.
   #
-  # @param [JobPool] pool The pool that will contain this job.
-  # @param [String, Array] command The command to run.  Can be specified either
-  #         as a string or an array of arguments for Process.spawn.
-  # @param [Hash] options A customizable set of options yo
-  # @option options [IO, String] :stdin The child's input. Can be specified as a string or an IO object.
+  # ## Parameters
+  #
+  # * pool [JobPool]: The pool that will contain this job.
+  # * command [String, Array]: The command to run.  Can be specified either
+  #                  as a string or an array of arguments for Process.spawn.
+  #
+  # ## Options
+  #
+  # * stdin [IO, String]: The child's input.  If an IO object isn't supplied,
+  #        an IOString will be created by calling the parameter's to_s method.
+  # * stdout [IO]: the IO object to receive the child's output.
+  # * stderr [IO]: the IO object to receive the child's stderr.
+  # * timeout [seconds]: the number of seconds to wait before killing the job.
+  #
+  # If `stdin`, `stdout`, or `stderr` are omitted, an empty IOString will be created.
+  # If output and error are IOStrings, the [output] method will return the child's
+  # stdout, and [error] will return its stderr.
+  #
+  # ## Examples
+  #
+  # * Simple invocation:            `job = Job.new pool, 'echo hi'`
+  # * Redirect outpout to a file:   `Job.new pool, 'wkhtmltopdf', stdout: File.new('/tmp/out.pdf', 'w')`
+  # * Passing an array and options: `Job.new pool, ['cat', '/tmp/infile', {pgroup: true}]`
+
   def initialize pool, command, options={}
-
-    inio=nil, outio=nil, errio=nil, timeout=nil
     @start_time = Time.now
-    @pool  = pool
-    @inio  = inio || StringIO.new
-    @inio  = StringIO.new(@inio.to_s) unless @inio.respond_to?(:readpartial)
-    @outio = outio || StringIO.new
-    @errio = errio || StringIO.new
-    @chin, @chout, @cherr, @child = Open3.popen3(*command)
-
-    @pool._add(self)
-    @chout.binmode
-
+    @pool   = pool
     @killed = false
     @timed_out = false
 
-    @thrin  = Thread.new { drain(@inio, @chin) }
-    @throut = Thread.new { drain(@chout, @outio) }
-    @threrr = Thread.new { drain(@cherr, @errio) }
+    @stdin  = options[:stdin] || StringIO.new
+    @stdin  = StringIO.new(@stdin.to_s) unless @stdin.respond_to?(:readpartial)
+    @stdout = options[:stdout] || StringIO.new
+    @stderr  = options[:stderr] || StringIO.new
+
+    @chin, @chout, @cherr, @child = Open3.popen3(*command)
+    @chout.binmode
+
+    @pool._add(self)
+
+    @thrin  = Thread.new { drain(@stdin, @chin) }
+    @throut = Thread.new { drain(@chout, @stdout) }
+    @threrr = Thread.new { drain(@cherr, @stderr) }
 
     # ensure cleanup is called when the child exits. (crazy that this requires a whole new thread!)
     @cleanup_thread = Thread.new do
-      if timeout
-        # TODO: inline outatime
-        outatime unless @child.join(timeout)
+      if options[:timeout]
+        unless @child.join(timeout)
+          @timed_out = true
+          kill
+        end
       else
         @child.join
       end
@@ -63,19 +82,19 @@ class JobPool::Job
   # @option opts [String] :to Recipient email
   # @option opts [String] :body ('') The email's body
   def write *args
-    @inio.write *args
+    @stdin.write *args
   end
 
   def read *args
-    @outio.read *args
+    @stdout.read *args
   end
 
   def output
-    @outio.string
+    @stdout.string
   end
 
   def error
-    @errio.string
+    @stderr.string
   end
 
   def finished?
@@ -143,11 +162,6 @@ private
   def wait_for_the_end
     [@thrin, @throut, @threrr, @child].each(&:join)
     @cleanup_thread.join unless Thread.current == @cleanup_thread
-  end
-
-  def outatime
-    @timed_out = true
-    kill
   end
 
   # reads every last drop, then closes both files.  must be threadsafe.
