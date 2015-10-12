@@ -1,3 +1,3 @@
 class JobPool
-  VERSION = "0.5" # :nodoc:
+  VERSION = "0.6" # :nodoc:
 end
