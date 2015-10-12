@@ -6,6 +6,8 @@ require 'job_pool/job'
 # TODO: rewrite wait_next
 
 class JobPool
+  # Indicates that the maximum allowed jobs are already running.
+  # @see 
   class TooManyJobsError < StandardError; end
 
   attr_accessor :max_jobs

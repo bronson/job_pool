@@ -5,7 +5,7 @@ require 'job_pool/job'
 #    while rspec spec/job_pool/job_spec.rb ; do : ; done
 
 describe JobPool::Job do
-  class FakeJobPool
+  class FakeJobPool # :nodoc:  massively oversimplified job pool used in some testing
     def initialize
       @jobs = []
     end
@@ -28,7 +28,7 @@ describe JobPool::Job do
   let(:chout) { StringIO.new }
   let(:cherr) { StringIO.new }
 
-  def time_this_block &block
+  def time_this_block &block # :nodoc:
     start = Time.now
     block.call
     finish = Time.now
