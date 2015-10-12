@@ -66,7 +66,7 @@ describe JobPool do
       expect {
         child = pool.wait_next
         # if I don't use a string, rdoc claims ThreadsWait is my class.  Bug?
-      }.to raise_exception(Object.const_get 'ThreadsWait::ErrNoWaitingThread')
+      }.to raise_exception(ThreadsWait::ErrNoWaitingThread)
     end
   end
 
